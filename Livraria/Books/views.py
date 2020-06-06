@@ -20,6 +20,22 @@ def book_by_user_id(request, id_client=0):
     serializer = BookSerializer(book.objects.filter(user=user_instance), many=True)
     return JsonResponse(serializer.data, safe=False)
 
+def reserve_by_id_client(request, id_book=0, id_client=0):
+    if id_book < 0:
+        return HttpResponseNotFound()
+    if not book.objects.filter(id=id_book).exists():
+        return HttpResponseNotFound()
+    book_instance = book.objects.get(id=id_book)
+    if not book_instance.status == book.AVAILABLE:
+        return HttpResponseNotFound('sdf')
+    if not User.objects.filter(id=id_client).exists():
+        return HttpResponseNotFound()
+    user_instance = User.objects.get(id=id_client)
+    book_instance.user = user_instance
+    book_instance.status = book.BORROWED
+    book_instance.save()
+    serializer = BookSerializer(book_instance)
+    return JsonResponse(serializer.data)
 
 
 #def books(request):

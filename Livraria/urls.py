@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from Livraria.Books.views import BooksViewSet, book_by_user_id
+from Livraria.Books.views import BooksViewSet, book_by_user_id, reserve_by_id_client
 from Livraria.Accounts.views import AccountsViewSet
 from django.contrib import admin
 from django.urls import path, include
@@ -29,5 +29,6 @@ router.register(r'Accounts', AccountsViewSet)
 urlpatterns = [
     path('', include(router.urls)),                     # pega todas urls que estão no router
     path('admin/', admin.site.urls),
-    path('client/<int:id_client>/books', book_by_user_id)
+    path('client/<int:id_client>/books', book_by_user_id),
+    path('books/<int:id_book>/reserve/<int:id_client>', reserve_by_id_client),
 ]
