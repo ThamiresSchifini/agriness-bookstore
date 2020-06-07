@@ -3,20 +3,34 @@ from Livraria.Books.models import book, TAX_LT_3_DAYS, TAX_GT_3_DAYS, TAX_GT_5_D
 from Livraria.Accounts.models import User
 from Livraria.Books.serializers import BookSerializer
 from rest_framework import viewsets
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound, HttpResponseBadRequest, HttpResponseNotAllowed, JsonResponse
 
 
 # Create your views here.
 
-class BooksViewSet(viewsets.ModelViewSet):                  # modelviewset = todos métodos http
+class BooksViewSet(viewsets.ModelViewSet):
     queryset = book.objects.all()
     serializer_class = BookSerializer
 
+def allowed_method(http_verb):
+    def decorator(my_func):
+        def internal(*args, **kwargs):
+            request = args[0]
+            if not request.method == http_verb:
+                return HttpResponseNotAllowed('Method not allowed, must be ' + http_verb)
+            original_result = my_func(*args, **kwargs)
+            return original_result
+        return internal
+    return decorator
+
+@allowed_method('GET')
 def book_by_user_id(request, id_client=0):
-    if id_client < 0:
-        return HttpResponseNotFound()
+    if not request.method == 'GET':
+        return HttpResponseNotAllowed('Method not allowed, must be GET')
+    if id_client <= 0:
+        return HttpResponseBadRequest('Id must be positive')
     if not User.objects.filter(id=id_client).exists():
-        return HttpResponseNotFound()
+        return HttpResponseNotFound('User not found')
     user_instance = User.objects.get(id=id_client)
 
     book_list = []
@@ -29,16 +43,17 @@ def book_by_user_id(request, id_client=0):
 
     return JsonResponse(book_list, safe=False)
 
+@allowed_method('PATCH')
 def reserve_by_id_client(request, id_book=0, id_client=0):
-    if id_book < 0:
-        return HttpResponseNotFound()
+    if id_book <= 0 or id_client <= 0:
+        return HttpResponseBadRequest('Id must be positive')
     if not book.objects.filter(id=id_book).exists():
-        return HttpResponseNotFound('livro n existe')
+        return HttpResponseNotFound('Book not found')
     book_instance = book.objects.get(id=id_book)
     if not book_instance.status == book.AVAILABLE:
-        return HttpResponseNotFound('livro n disponivel')
+        return HttpResponseBadRequest('Book not available')
     if not User.objects.filter(id=id_client).exists():
-        return HttpResponseNotFound('usuario n existe')
+        return HttpResponseNotFound('User not found')
     user_instance = User.objects.get(id=id_client)
     book_instance.user = user_instance
     book_instance.status = book.BORROWED
@@ -65,11 +80,3 @@ def tax_by_book(data_locacao_book):
         total_tax =(TAX_GT_5_DAYS+(0.6*delta_days))
 
     return total_tax
-
-
-#def books(request):
- #   if request.method == 'GET':
-  #      the_books = book.objects.first()
-   #     serializer = BookSerializer(the_books)
-    #    return JsonResponse(serializer.data)
-    #return HttpResponse(JSONResponse)
