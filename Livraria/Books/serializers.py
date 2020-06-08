@@ -1,10 +1,12 @@
 from rest_framework import serializers
-from Livraria.Books.models import book
+
+from Livraria.Books.models import Book
 
 
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
-        model = book
+        model = Book
         fields = ['status', 'name', 'author']
 
-        # posso criar uma def aqui e alterar coisas do modelo (excluir, editar, lógica etc)
+    def get_status(self, obj):
+        return 'Disponível' if obj.status == 'A' else 'Emprestado'
