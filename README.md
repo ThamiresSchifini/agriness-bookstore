@@ -1,6 +1,6 @@
 # Agriness Developer Backend Challenge - Thamires S. F.
 ## Overview
-Este projeto é uma API em Django para comtemplar o desafio proposto pela Agriness 
+Este projeto é uma API em Django para contemplar o desafio proposto pela Agriness 
 
 ## Get started:
 ### Requisitos:
