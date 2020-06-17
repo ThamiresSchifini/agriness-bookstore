@@ -60,6 +60,26 @@ def reserve_by_id_client(request, id_book=0, id_client=0):
     serializer = BookSerializer(book_instance)
     return JsonResponse(serializer.data)
 
+@allowed_method('PATCH')
+def return_by_id_client(request, id_book=0, id_client=0):
+    if id_book <= 0 or id_client <= 0:
+        return HttpResponseBadRequest('Id must be positive')
+    if not Book.objects.filter(id=id_book).exists():
+        return HttpResponseNotFound('Book not found')
+    book_instance = Book.objects.get(id=id_book)
+    if not book_instance.status == Book.BORROWED:
+        return HttpResponseBadRequest
+    if not User.objects.filter(id=id_client).exists():
+        return HttpResponseNotFound('User not found')
+    user_instance = User.objects.get(id=id_client)
+    if not book_instance.user == user_instance:
+        return HttpResponseBadRequest
+    book_instance.status = Book.AVAILABLE
+    book_instance.user = None
+    book_instance.save()
+    serializer = BookSerializer(book_instance)
+    return JsonResponse(serializer.data)
+
 def tax_by_book(pickup_book_date):
     """Function to calculate return tax
     :param pickup_book_date: the date the book was taken
